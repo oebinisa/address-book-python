@@ -31,7 +31,6 @@ jobs:
 
       - name: Create virtual environment
         run: python3 -m venv venv
-        working-directory: ./address-book-python
 
       - name: Activate virtual environment and install dependencies
         run: |
