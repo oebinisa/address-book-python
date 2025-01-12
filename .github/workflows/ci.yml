@@ -23,6 +23,22 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install Python3 venv dependencies
+        run: sudo apt-get install -y python3-venv
+
+      - name: Clean workspace
+        run: rm -rf venv
+
+      - name: Create virtual environment
+        run: python3 -m venv venv
+        working-directory: ./address-book-python
+
+      - name: Activate virtual environment and install dependencies
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt
+        working-directory: ./address-book-python
+
       - name: Install dependencies
         run: |
           python3 -m venv venv
