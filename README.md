@@ -39,7 +39,7 @@ address-book-python/
 
 ```
 
-## Detailed Steps:
+## Part 1: Detailed Steps:
 
 ### Step 1: Setting Up the Virtual Environment
 1. **Create the project directory**:
@@ -277,3 +277,188 @@ if __name__ == "__main__":
    ```
 
 Your Address Book app should now be accessible at `http://127.0.0.1:5000`, with a navigation bar to add and view contacts!
+
+
+
+
+
+
+
+## Part 2: CI with GitHub Actions with Compressed/Zipped Artifacts**
+
+Here’s a draft of the courseware section for **Project 1: CI with GitHub Actions with Compressed/Zipped Artefacts**. This includes detailed instructions, CLI equivalents, and guidelines for setting up the pipeline.
+
+#### **Objective**
+Set up a Continuous Integration (CI) pipeline using GitHub Actions for the `address-book-python` application. The pipeline will:
+1. Run automated tests to verify code quality.
+2. Generate a compressed/zipped build artifact containing the app.
+3. Upload the artifact to an S3 bucket with a timestamped filename.
+4. Send email notifications for CI results using MailGun.
+
+---
+
+### **Prerequisites**
+- **Basic Knowledge**: Familiarity with GitHub Actions, Python, Flask, SQLAlchemy, MySQL, and dotenv.
+- **Tools**:
+  - AWS CLI (configured for access to S3 bucket `s3://simartefacts/`).
+  - MailGun account for email notifications.
+  - Python development environment (local or virtual).
+
+---
+
+### **Step-by-Step Instructions**
+
+#### **Step 1: Clone the Project Repository**
+1. Clone the repository locally:
+   ```bash
+   git clone https://github.com/oebinisa/address-book-python.git
+   cd address-book-python
+   ```
+
+2. Verify the folder structure:
+   - Backend: Python Flask app.
+   - Frontend: HTML and Bootstrap files.
+   - Database: MySQL integration with SQLAlchemy ORM.
+   - Sensitive Data: `.env` for environment variables.
+
+---
+
+#### **Step 2: Configure GitHub Repository for CI**
+1. Create a `.github/workflows/ci.yml` file:
+   ```bash
+   mkdir -p .github/workflows && touch .github/workflows/ci.yml
+   ```
+
+2. Add the following YAML content for GitHub Actions:
+
+   ```yaml
+   name: CI Pipeline
+
+   on:
+     push:
+       branches:
+         - main
+     pull_request:
+       branches:
+         - main
+
+   jobs:
+     build:
+       runs-on: ubuntu-latest
+
+       steps:
+         # Step 1: Checkout code
+         - name: Checkout code
+           uses: actions/checkout@v3
+
+         # Step 2: Set up Python environment
+         - name: Set up Python
+           uses: actions/setup-python@v4
+           with:
+             python-version: 3.9
+
+         - name: Install dependencies
+           run: |
+             python -m venv venv
+             source venv/bin/activate
+             pip install -r requirements.txt
+
+         # Step 3: Run tests
+         - name: Run tests
+           run: |
+             source venv/bin/activate
+             pytest
+
+         # Step 4: Package the app as a zip file
+         - name: Create artifact
+           run: |
+             timestamp=$(date +'%Y%m%d%H%M%S')
+             zip -r address-book-python-$timestamp.zip .
+           env:
+             TIMESTAMP: ${{ github.run_id }}
+
+         # Step 5: Upload to S3
+         - name: Upload to S3
+           env:
+             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+             AWS_DEFAULT_REGION: us-east-1
+           run: |
+             aws s3 cp address-book-python-$TIMESTAMP.zip s3://simartefacts/
+
+         # Step 6: Send email notification
+         - name: Send email notification
+           run: |
+             curl -s --user "api:${{ secrets.MAILGUN_API_KEY }}" \
+             https://api.mailgun.net/v3/YOUR_DOMAIN/messages \
+             -F from="CI Pipeline <mailgun@YOUR_DOMAIN>" \
+             -F to="recipient@example.com" \
+             -F subject="CI Pipeline Status: Success" \
+             -F text="The build artifact has been successfully created and uploaded to S3."
+   ```
+
+---
+
+#### **Step 3: Set Up Secrets in GitHub**
+1. Navigate to your GitHub repository → Settings → Secrets → Actions.
+2. Add the following secrets:
+   - `AWS_ACCESS_KEY_ID`: Your AWS Access Key ID.
+   - `AWS_SECRET_ACCESS_KEY`: Your AWS Secret Access Key.
+   - `MAILGUN_API_KEY`: API key for MailGun.
+   - `MAILGUN_DOMAIN`: Your MailGun domain.
+
+---
+
+#### **Step 4: Verify the Pipeline**
+1. Push changes to the `main` branch:
+   ```bash
+   git add .
+   git commit -m "Add GitHub Actions CI pipeline"
+   git push origin main
+   ```
+
+2. Check the **Actions** tab in the GitHub repository for pipeline execution progress.
+
+---
+
+#### **Step 5: Test the Artifacts**
+1. Log in to your AWS S3 account.
+2. Navigate to the `simartefacts` bucket.
+3. Verify the uploaded artifact:
+   - The file should be named as `address-book-python-<timestamp>.zip`.
+
+---
+
+#### **Step 6: Check Email Notifications**
+1. Verify that the email notification is sent to the configured recipient.
+2. Troubleshoot with MailGun logs if emails are not delivered.
+
+---
+
+### **CLI Equivalents for Console Steps**
+
+#### Uploading Artifacts to S3
+```bash
+aws s3 cp address-book-python-$(date +'%Y%m%d%H%M%S').zip s3://simartefacts/
+```
+
+#### Sending Email with MailGun
+```bash
+curl -s --user "api:<MAILGUN_API_KEY>" \
+https://api.mailgun.net/v3/<MAILGUN_DOMAIN>/messages \
+-F from="CI Pipeline <mailgun@<MAILGUN_DOMAIN>>" \
+-F to="recipient@example.com" \
+-F subject="CI Pipeline Status: Success" \
+-F text="The build artifact has been successfully created and uploaded to S3."
+```
+
+---
+
+### **Assignment Guidelines**
+1. Complete the pipeline setup as described.
+2. Ensure the pipeline runs successfully on a push or pull request to the `main` branch.
+3. Upload proof of your pipeline execution:
+   - Screenshot of the Actions tab.
+   - Screenshot of the uploaded artifact in S3.
+
+Reach out for guidance via WhatsApp or email if you encounter any issues.
