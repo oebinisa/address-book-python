@@ -286,8 +286,6 @@ Your Address Book app should now be accessible at `http://127.0.0.1:5000`, with 
 
 ## Part 2: CI with GitHub Actions with Compressed/Zipped Artifacts**
 
-Here’s a draft of the courseware section for **Project 1: CI with GitHub Actions with Compressed/Zipped Artefacts**. This includes detailed instructions, CLI equivalents, and guidelines for setting up the pipeline.
-
 #### **Objective**
 Set up a Continuous Integration (CI) pipeline using GitHub Actions for the `address-book-python` application. The pipeline will:
 1. Run automated tests to verify code quality.
