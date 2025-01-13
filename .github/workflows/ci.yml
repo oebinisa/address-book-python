@@ -82,6 +82,6 @@ jobs:
           -F from="CI Pipeline <mailgun@sandbox55278b321bec42ad88f6d7461395b9f6.mailgun.org>" \
           -F to="o.oluwapelumi@gmail.com" \
           -F subject="CI Pipeline Status: Success" \
-          -F text="The build artifact has been successfully created and uploaded to S3."\
+          -F text="The build artifact has been successfully created and uploaded to S3." \
           -w "\nHTTP Status Code: %{http_code}\n"
                   
