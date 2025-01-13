@@ -78,9 +78,10 @@ jobs:
       - name: Send email notification
         run: |
           curl -s --user "api:${{ secrets.MAILGUN_API_KEY }}" \
-          https://api.mailgun.net/v3/${{ secrets.MAILGUN_DOMAIN }}/messages \
-          -F from="CI Pipeline <mailgun@${{ secrets.MAILGUN_DOMAIN }}>" \
+          https://api.mailgun.net/v3/devforge.cc/messages \
+          -F from="CI Pipeline <mailgun@devforge.cc" \
           -F to="o.oluwapelumi@gmail.com" \
           -F subject="CI Pipeline Status: Success" \
           -F text="The build artifact has been successfully created and uploaded to S3."
+          -w "\nHTTP Status Code: %{http_code}\n"
                   
