@@ -24,6 +24,14 @@ jobs:
           --health-retries=3
         ports:
           - 3306:3306
+    steps:
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h127.0.0.1 --silent; do
+            echo "Waiting for MySQL to be ready..."
+            sleep 2
+          done
+
   build:
     runs-on: ubuntu-latest
 
@@ -38,50 +46,35 @@ jobs:
         with:
           python-version: 3.9
 
-      # Install dependencies
-      - name: Install Python3 venv dependencies
+      # Step 3: Install virtual environment 
+      - name: Install venv tools
         run: sudo apt-get install -y python3-venv
 
-      - name: Clean workspace
-        run: rm -rf venv
-
-      - name: Create virtual environment
-        run: python3 -m venv venv
-
-      - name: Activate virtual environment and install dependencies
-        run: |
-          source venv/bin/activate
-          pip install -r requirements.txt
-
-      - name: Install dependencies
+      # Step 4: Set up virtual environment
+      - name: Set up virtual environment and install dependencies
         run: |
           python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
 
-      # Step 3: Run tests
+      # Step 5: Run tests
       - name: Run tests
         run: |
           source venv/bin/activate
           pytest
 
-      # Step 4: Package the app as a zip file
+      # Step 6: Package the app as a zip file
       - name: Create artifact
         run: |
-          timestamp=$(date +'%Y%m%d%H%M%S')
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
           zip -r address-book-python-$timestamp.zip .
         env:
           TIMESTAMP: ${{ github.run_id }}
 
-      - name: Set TIMESTAMP
-        run: echo "TIMESTAMP=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
-
-      - name: Create zip artifact
-        run: zip -r address-book-python-${{ env.TIMESTAMP }}.zip .
-
       - name: Verify artifact
         run: ls -la address-book-python-*.zip
 
+      # Step 7: Upload zipped artifact to S3
       - name: Upload artifact to S3
         run: aws s3 cp address-book-python-${{ env.TIMESTAMP }}.zip s3://simartefacts/
         env:
@@ -90,7 +83,7 @@ jobs:
             AWS_DEFAULT_REGION: us-east-1
 
 
-      # Step 5: Send email notification
+      # Step 8: Send email notification
       - name: Send email notification
         run: |
           curl -s --user "api:${{ secrets.MAILGUN_API_KEY }}" \
